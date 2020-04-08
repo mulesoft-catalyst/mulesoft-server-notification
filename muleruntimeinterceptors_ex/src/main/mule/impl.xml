@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="53ac35ca-c241-4934-9495-a74cbeeefc91" basePath="/api" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<vm:config name="OrderStatusQueue" doc:name="VM Config" doc:id="a2e7851b-3b02-4d98-b5f3-8b8656dd5204">
+		<vm:connection />
+		<vm:queues >
+			<vm:queue queueName="status.order.queue.request" />
+			<vm:queue queueName="status.order.queue.response" />
+		</vm:queues>
+	</vm:config>
+	<flow name="pipeline_order_example" doc:id="f2f62997-5ed2-4618-beb0-993888b95271" >
+		<http:listener doc:name="/order" doc:id="c3704a85-2c87-41b3-a33d-2ea46f681e59" config-ref="HTTP_Listener_config" path="/v1/order"/>
+		<logger level="INFO" doc:name="Log_CorrelationId" doc:id="99003c45-cbcd-46ac-a18a-13f362625526" category="pipeline_order_example.correlationId" message="#[correlationId]"/>
+		<flow-ref doc:name="setOrderStatus" doc:id="9dfded62-4052-4e5b-9874-999227a089af" name="pipeline_subflow_itemType_check"/>
+		<ee:transform doc:name="process_message" doc:id="7a02a1ab-a761-43a8-bc3b-c3e534843e03" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ++ {"status": vars.status}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<sub-flow name="pipeline_subflow_itemType_check" doc:id="fbd0286b-365f-4e40-b0c6-cd560ea7e013" >
+		<choice doc:name="ItemType" doc:id="6b3e5770-50ff-47fc-8910-fda699a323e0" >
+			<when expression='#[sizeOf(payload.items.*itemType filter $ == "electronics") &gt; 0]'>
+				<vm:publish-consume queueName="status.order.queue.request" doc:name="Publish consume" doc:id="8333edc6-150a-4fe7-8eb2-c4b3e44a6259" config-ref="OrderStatusQueue" sendCorrelationId="ALWAYS" correlationId="#[correlationId]" target="status"/>
+			</when>
+			<otherwise >
+				<set-variable value="#['Shipped']" doc:name="setStatus" doc:id="93feeae2-e92b-4ed7-9266-994582e3c6fb" variableName="status"/>
+			</otherwise>
+		</choice>
+	</sub-flow>
+	<flow name="pipeline_listener_example" doc:id="45cf7a63-d0cd-4379-80b7-84c6b3f942f9" >
+		<vm:listener queueName="status.order.queue.request" doc:name="Listener" doc:id="f5fff3cd-4e30-4b15-aaa7-a0d4961e0447" config-ref="OrderStatusQueue"/>
+		<logger level="INFO" doc:name="Log_correlationId" doc:id="5adaa9f2-6308-4d04-9270-5c6570fa098e" message="#[correlationId]" category="pipeline_listener_example.correlationId"/>
+		<set-payload value="#['In-progress']" doc:name="Set Payload" doc:id="e3d26991-04b9-4e94-bf55-9b99a76279c0" />
+	</flow>
+	<flow name="pipeline_payment_example" doc:id="7033b302-1c15-493e-a8b8-a8b86bd2ab40">
+		<http:listener doc:name="/payment" doc:id="bf5b5c5f-9afc-440c-b1eb-53382f90653e" config-ref="HTTP_Listener_config" path="/v1/payment" />
+		<logger level="INFO" doc:name="Log_CorrelationId" doc:id="4bbb8144-d431-4b52-997e-1481a0ae4b94" message="#[correlationId]" category="pipeline_payment_example.correlationId" />
+	</flow>
+	<flow name="pipeline_throw_exception" doc:id="5e619a95-efe4-46ca-8fca-f87bd0c5f70f" >
+		<http:listener doc:name="throwException" doc:id="45ccda67-abf3-47bc-bcb3-e54a9a414fda" config-ref="HTTP_Listener_config" path="/v1/throwException"/>
+		<raise-error doc:name="Raise error" doc:id="a7ded9b5-38d3-4118-a707-3b7666bce3e2" type="SERVER_RUNTIME:EXCEPTION_NOTIFICATION_DEMO" description="This is a server error demostration for server notification"/>
+	</flow>
+</mule>

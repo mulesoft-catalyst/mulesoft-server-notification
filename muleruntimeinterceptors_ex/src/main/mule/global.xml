@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:spring="http://www.mulesoft.org/schema/mule/spring"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/spring http://www.mulesoft.org/schema/mule/spring/current/mule-spring.xsd">
+	<spring:config name="Spring_Config" doc:name="Spring Config"
+		doc:id="998a5d8d-a322-4dc0-ac45-4294610da09d" files="beans.xml" />
+
+	<notifications>
+		<notification event="PIPELINE-MESSAGE" />
+		<notification-listener ref="mulePipelineNotification" />
+	</notifications> 
+	<notifications>
+		<notification event="CONTEXT" />
+		<notification-listener ref="flowConstructionListener" />
+	</notifications>
+    <notifications>
+		 <notification event="CONTEXT"/>
+  		<notification-listener ref="muleContextListener"/>
+	</notifications>
+	<notifications>
+  		<notification event="MESSAGE-PROCESSOR"/>
+  		<notification-listener ref="muleMessageListener"/>
+  	</notifications>
+	<notifications>
+  		<notification event="EXCEPTION"/>
+  		<notification-listener ref="muleExceptionListener"/>
+  	</notifications>
+
+</mule>

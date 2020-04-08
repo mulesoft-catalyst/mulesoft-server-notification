@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans  xmlns="http://www.springframework.org/schema/beans"
+	
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation=" http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd 
+    http://www.springframework.org/schema/context 
+    http://www.springframework.org/schema/context/spring-context.xsd">
+    
+    
+		
+		  <bean id="mulePipelineNotification" name="mulePipelineNotification" class="com.mule.runetime.interceptors.demo.MulePipelineNotification"/> 
+		  <bean id="flowConstructionListener" name="flowConstructionListener" class="com.mule.runetime.interceptors.demo.FlowConstructionListener"/> 
+		  <bean id="muleContextListener" name="muleContextListener" class="com.mule.runetime.interceptors.demo.MuleContextListener"/>  
+		  <bean id="muleMessageListener" name="muleMessageListener" class="com.mule.runetime.interceptors.demo.MuleMessageListener"/>
+		  <bean id="muleExceptionListener" name="muleExceptionListener" class="com.mule.runetime.interceptors.demo.MuleExceptionNotification"/>
+
+
+</beans>
